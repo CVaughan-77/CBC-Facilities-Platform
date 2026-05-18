@@ -9,7 +9,10 @@ const { v4: uuidv4 } = require('uuid');
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors());app.use(cors({
+  origin: '*',
+  credentials: true
+}));
 app.use(express.json());
 
 // Supabase client

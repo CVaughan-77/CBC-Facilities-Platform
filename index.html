@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBC Facilities Work Order Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #d84315;
+        }
+
+        .header p {
+            color: #999;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #d84315;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #b02a0c;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            font-size: 32px;
+            color: #d84315;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .login-box p {
+            color: #999;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-box form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .login-box input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: #d84315;
+            box-shadow: 0 0 0 2px rgba(216, 67, 21, 0.1);
+        }
+
+        .login-box button {
+            padding: 12px;
+            background: #d84315;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-box button:hover {
+            background: #b02a0c;
+        }
+
+        .error {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .nav {
+            background: white;
+            border-bottom: 1px solid #ddd;
+            padding: 0;
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .nav button {
+            flex: 0 0 auto;
+            padding: 16px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .nav button:hover {
+            color: #d84315;
+        }
+
+        .nav button.active {
+            color: #d84315;
+            border-bottom-color: #d84315;
+        }
+
+        .page {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric {
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            padding: 25px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #d84315;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #d84315;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background: #f9f9f9;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 1px solid #ddd;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-open {
+            background: #fff3e0;
+            color: #f57c00;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-in-progress {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: #e8f5e9;
+            color: #388e3c;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>🍞 CBC Facilities</h1>
+            <p>Work Order Management System</p>
+            <form id="loginForm">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+                <div id="loginError" class="error" style="display: none;"></div>
+            </form>
+            <p style="color: #999; text-align: center; margin-top: 20px; font-size: 12px;">
+                Demo: admin@cbc.com / Admin123!@
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="dashboard" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <div>
+                    <h1>🍞 CBC Facilities</h1>
+                    <p>Work Order Management System</p>
+                </div>
+                <div>
+                    <span id="userName"></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="nav">
+                <button class="active" onclick="switchTab('dashboard', event)">Dashboard</button>
+                <button onclick="switchTab('workorders', event)">Work Orders</button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="page active">
+                <h2>Dashboard</h2>
+                <div class="loading" id="dashboardLoading">Loading metrics...</div>
+                <div id="dashboardContent" style="display: none;">
+                    <div class="metrics" id="metricsContainer"></div>
+                    <h3 style="margin-top: 30px; margin-bottom: 15px;">Work Orders by Status</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusBreakdown"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Work Orders Tab -->
+            <div id="workorders" class="page">
+                <h2>Work Orders</h2>
+                <div class="loading" id="workordersLoading">Loading work orders...</div>
+                <div id="workordersContent" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>WO ID</th>
+                                <th>Location</th>
+                                <th>Equipment</th>
+                                <th>Vendor</th>
+                                <th>Cost</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workordersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://cbc-facilities-platform.up.railway.app';
+
+        let currentUser = null;
+        let workOrders = [];
+        let metrics = null;
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Invalid credentials');
+                }
+
+                const data = await response.json();
+                currentUser = data.user;
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                showDashboard();
+                loadDashboard();
+            } catch (error) {
+                document.getElementById('loginError').textContent = error.message;
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            currentUser = null;
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboardScreen').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+            document.getElementById('userName').textContent = `${currentUser.fullName} (${currentUser.role})`;
+        }
+
+        async function loadDashboard() {
+            const token = localStorage.getItem('token');
+            try {
+                const [metricsRes, workordersRes] = await Promise.all([
+                    fetch(`${API_URL}/api/analytics/dashboard`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`${API_URL}/api/work-orders`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (metricsRes.ok) {
+                    metrics = await metricsRes.json();
+                    displayMetrics();
+                }
+
+                if (workordersRes.ok) {
+                    const data = await workordersRes.json();
+                    workOrders = data.data || [];
+                    displayWorkOrders();
+                }
+
+                document.getElementById('dashboardLoading').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                document.getElementById('workordersLoading').style.display = 'none';
+                document.getElementById('workordersContent').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        function displayMetrics() {
+            if (!metrics) return;
+
+            const html = `
+                <div class="metric">
+                    <div class="metric-value">${metrics.total}</div>
+                    <div class="metric-label">Total WOs</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${metrics.open}</div>
+                    <div class="metric-label">Open</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${metrics.inProgress}</div>
+                    <div class="metric-label">In Progress</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${metrics.completed}</div>
+                    <div class="metric-label">Completed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">$${(metrics.totalCost / 1000000).toFixed(2)}M</div>
+                    <div class="metric-label">Total Cost</div>
+                </div>
+            `;
+
+            document.getElementById('metricsContainer').innerHTML = html;
+
+            const openCost = workOrders.filter(w => w.status === 'Open').reduce((sum, w) => sum + (w.estimated_cost || 0), 0);
+            const progressCost = workOrders.filter(w => w.status === 'In Progress').reduce((sum, w) => sum + (w.estimated_cost || 0), 0);
+            const completedCost = workOrders.filter(w => w.status === 'Completed').reduce((sum, w) => sum + (w.estimated_cost || 0), 0);
+
+            const statusHtml = `
+                <tr>
+                    <td><strong>Open</strong></td>
+                    <td>${metrics.open}</td>
+                    <td>${((metrics.open / metrics.total) * 100).toFixed(1)}%</td>
+                    <td>$${openCost.toLocaleString()}</td>
+                </tr>
+                <tr>
+                    <td><strong>In Progress</strong></td>
+                    <td>${metrics.inProgress}</td>
+                    <td>${((metrics.inProgress / metrics.total) * 100).toFixed(1)}%</td>
+                    <td>$${progressCost.toLocaleString()}</td>
+                </tr>
+                <tr>
+                    <td><strong>Completed</strong></td>
+                    <td>${metrics.completed}</td>
+                    <td>${((metrics.completed / metrics.total) * 100).toFixed(1)}%</td>
+                    <td>$${completedCost.toLocaleString()}</td>
+                </tr>
+            `;
+
+            document.getElementById('statusBreakdown').innerHTML = statusHtml;
+        }
+
+        function displayWorkOrders() {
+            const rows = workOrders.slice(0, 100).map(wo => {
+                let statusClass = 'status-open';
+                if (wo.status === 'In Progress') statusClass = 'status-in-progress';
+                if (wo.status === 'Completed') statusClass = 'status-completed';
+
+                return `
+                    <tr>
+                        <td><strong>${wo.wo_number}</strong></td>
+                        <td>${wo.location?.name || '-'}</td>
+                        <td>${wo.equipment || '-'}</td>
+                        <td>${wo.vendor?.name || '-'}</td>
+                        <td>$${(wo.estimated_cost || 0).toLocaleString()}</td>
+                        <td><span class="${statusClass}">${wo.status}</span></td>
+                        <td>${wo.created_at ? new Date(wo.created_at).toLocaleDateString() : '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('workordersTable').innerHTML = rows || '<tr><td colspan="7" style="text-align: center; color: #999;">No work orders found</td></tr>';
+        }
+
+        function switchTab(tab, event) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Check if already logged in
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('user');
+            if (token) {
+                currentUser = JSON.parse(token);
+                showDashboard();
+                loadDashboard();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBC Facilities Work Order Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 28px; color: #d84315; }
+        .header p { color: #999; font-size: 13px; margin-top: 5px; }
+        .logout-btn { padding: 10px 20px; background: #d84315; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .logout-btn:hover { background: #b02a0c; }
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 400px; }
+        .login-box h1 { font-size: 32px; color: #d84315; margin-bottom: 10px; text-align: center; }
+        .login-box p { color: #999; text-align: center; margin-bottom: 30px; }
+        .login-box form { display: flex; flex-direction: column; gap: 15px; }
+        .login-box input { padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: inherit; }
+        .login-box input:focus { outline: none; border-color: #d84315; box-shadow: 0 0 0 2px rgba(216, 67, 21, 0.1); }
+        .login-box button { padding: 12px; background: #d84315; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .login-box button:hover { background: #b02a0c; }
+        .error { color: #d32f2f; font-size: 13px; margin-top: 10px; text-align: center; }
+        .dashboard { display: none; }
+        .nav { background: white; border-bottom: 1px solid #ddd; padding: 0; display: flex; gap: 0; margin-bottom: 20px; border-radius: 8px; overflow: hidden; }
+        .nav button { flex: 0 0 auto; padding: 16px 24px; background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-weight: 600; color: #666; transition: all 0.2s; }
+        .nav button:hover { color: #d84315; }
+        .nav button.active { color: #d84315; border-bottom-color: #d84315; }
+        .page { display: none; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .page.active { display: block; }
+        .page h2 { margin-bottom: 20px; font-size: 24px; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric { background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%); padding: 25px 20px; border-radius: 8px; border-left: 4px solid #d84315; text-align: center; }
+        .metric-value { font-size: 32px; font-weight: 700; color: #d84315; margin: 10px 0; }
+        .metric-label { font-size: 12px; color: #999; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        thead { background: #f9f9f9; }
+        th { padding: 12px; text-align: left; font-weight: 600; font-size: 13px; color: #666; border-bottom: 1px solid #ddd; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tbody tr:hover { background: #f9f9f9; }
+        .status-open { background: #fff3e0; color: #f57c00; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .status-in-progress { background: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .status-completed { background: #e8f5e9; color: #388e3c; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>🍞 CBC Facilities</h1>
+            <p>Work Order Management System</p>
+            <form id="loginForm">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+                <div id="loginError" class="error" style="display: none;"></div>
+            </form>
+            <p style="color: #999; text-align: center; margin-top: 20px; font-size: 12px;">
+                Demo: admin@cbc.com / Admin123!@
+            </p>
+        </div>
+    </div>
+
+    <div id="dashboardScreen" class="dashboard" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <div>
+                    <h1>🍞 CBC Facilities</h1>
+                    <p>Work Order Management System</p>
+                </div>
+                <div>
+                    <span id="userName"></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="nav">
+                <button class="active" onclick="switchTab('dashboard', event)">Dashboard</button>
+                <button onclick="switchTab('workorders', event)">Work Orders</button>
+            </div>
+
+            <div id="dashboard" class="page active">
+                <h2>Dashboard</h2>
+                <div class="metrics" id="metricsContainer"></div>
+                <h3 style="margin-top: 30px; margin-bottom: 15px;">Work Orders by Status</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statusBreakdown"></tbody>
+                </table>
+            </div>
+
+            <div id="workorders" class="page">
+                <h2>Work Orders</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>WO #</th>
+                            <th>Location</th>
+                            <th>Equipment</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workordersTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaultUsers = [
+            { id: 1, email: 'admin@cbc.com', password: 'Admin123!@', name: 'Admin User', role: 'admin' }
+        ];
+
+        const defaultWorkOrders = [
+            { id: 1, woNumber: 'WO-001', location: 'Store #101 - San Antonio', equipment: 'HVAC Unit', cost: 2500, status: 'Open', date: '2026-05-15' },
+            { id: 2, woNumber: 'WO-002', location: 'Store #205 - Dallas', equipment: 'Refrigerator', cost: 1800, status: 'In Progress', date: '2026-05-14' },
+            { id: 3, woNumber: 'WO-003', location: 'Store #312 - Austin', equipment: 'Oven', cost: 3200, status: 'Completed', date: '2026-05-10' },
+            { id: 4, woNumber: 'WO-004', location: 'Store #107 - Houston', equipment: 'Plumbing', cost: 950, status: 'Open', date: '2026-05-12' },
+            { id: 5, woNumber: 'WO-005', location: 'Store #203 - Fort Worth', equipment: 'Door Lock', cost: 450, status: 'Completed', date: '2026-05-08' }
+        ];
+
+        let currentUser = null;
+        let users = JSON.parse(localStorage.getItem('users')) || defaultUsers;
+        let workOrders = JSON.parse(localStorage.getItem('workOrders')) || defaultWorkOrders;
+
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('workOrders', JSON.stringify(workOrders));
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showDashboard();
+                loadDashboard();
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid email or password';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboardScreen').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+            document.getElementById('userName').textContent = `${currentUser.name} (${currentUser.role})`;
+        }
+
+        function loadDashboard() {
+            const total = workOrders.length;
+            const open = workOrders.filter(w => w.status === 'Open').length;
+            const inProgress = workOrders.filter(w => w.status === 'In Progress').length;
+            const completed = workOrders.filter(w => w.status === 'Completed').length;
+            const totalCost = workOrders.reduce((sum, w) => sum + w.cost, 0);
+
+            const metricsHtml = `
+                <div class="metric">
+                    <div class="metric-value">${total}</div>
+                    <div class="metric-label">Total WOs</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${open}</div>
+                    <div class="metric-label">Open</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${inProgress}</div>
+                    <div class="metric-label">In Progress</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${completed}</div>
+                    <div class="metric-label">Completed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">$${(totalCost / 1000).toFixed(1)}K</div>
+                    <div class="metric-label">Total Cost</div>
+                </div>
+            `;
+            document.getElementById('metricsContainer').innerHTML = metricsHtml;
+
+            const statusHtml = `
+                <tr><td><strong>Open</strong></td><td>${open}</td><td>${((open/total)*100).toFixed(1)}%</td></tr>
+                <tr><td><strong>In Progress</strong></td><td>${inProgress}</td><td>${((inProgress/total)*100).toFixed(1)}%</td></tr>
+                <tr><td><strong>Completed</strong></td><td>${completed}</td><td>${((completed/total)*100).toFixed(1)}%</td></tr>
+            `;
+            document.getElementById('statusBreakdown').innerHTML = statusHtml;
+
+            const woRows = workOrders.map(wo => {
+                let statusClass = 'status-open';
+                if (wo.status === 'In Progress') statusClass = 'status-in-progress';
+                if (wo.status === 'Completed') statusClass = 'status-completed';
+                return `
+                    <tr>
+                        <td><strong>${wo.woNumber}</strong></td>
+                        <td>${wo.location}</td>
+                        <td>${wo.equipment}</td>
+                        <td>$${wo.cost.toLocaleString()}</td>
+                        <td><span class="${statusClass}">${wo.status}</span></td>
+                        <td>${wo.date}</td>
+                    </tr>
+                `;
+            }).join('');
+            document.getElementById('workordersTable').innerHTML = woRows;
+        }
+
+        function switchTab(tab, event) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('currentUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                showDashboard();
+                loadDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
